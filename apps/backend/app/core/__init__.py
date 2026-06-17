@@ -1,4 +1,4 @@
-from app.core.config import settings
+from app.config.config import settings
 from app.core.database import Base, engine, get_db, AsyncSessionLocal
 from app.core.security import (
     Role,
