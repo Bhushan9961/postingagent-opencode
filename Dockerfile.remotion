@@ -1,0 +1,23 @@
+FROM node:24-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    chromium \
+    chromium-sandbox \
+    fonts-noto-color-emoji \
+    fonts-noto-core \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+COPY apps/remotion/package.json apps/remotion/package.json
+COPY apps/remotion/remotion.config.ts apps/remotion/
+COPY apps/remotion/tsconfig.json apps/remotion/
+COPY apps/remotion/src/ apps/remotion/src/
+
+RUN cd apps/remotion && npm install --omit=dev
+
+WORKDIR /app/apps/remotion
+
+CMD ["npx", "remotion", "studio"]

@@ -1,0 +1,19 @@
+[backend]
+  service = "backend"
+  build = "docker build -f Dockerfile.backend -t backend ."
+  start = "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
+[remotion]
+  service = "remotion"
+  build = "docker build -f Dockerfile.remotion -t remotion ."
+  start = "npx remotion studio --port $PORT"
+
+[celery-worker]
+  service = "celery-worker"
+  build = "docker build -f Dockerfile.backend -t celery-worker ."
+  start = "celery -A app.workers.celery_app worker --loglevel=info"
+
+[celery-beat]
+  service = "celery-beat"
+  build = "docker build -f Dockerfile.backend -t celery-beat ."
+  start = "celery -A app.workers.celery_app beat --loglevel=info"
