@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+.env
+*.egg-info/
+dist/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+.output/
+.nuxt/
+.nitro/
+.cache/
+.next/
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+*.lcov
+
+# Alembic
+alembic/versions/__pycache__/
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+
+# Media assets (large files)
+assets/generated/*
+!assets/generated/.gitkeep
+
+# Remotion
+apps/remotion/out/

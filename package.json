@@ -1,0 +1,20 @@
+{
+  "name": "ai-marketing-os",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:remotion": "pnpm --filter remotion dev",
+    "build:frontend": "pnpm --filter frontend build",
+    "build:remotion": "pnpm --filter remotion build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

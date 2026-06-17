@@ -1,0 +1,17 @@
+[project]
+name = "llm-client"
+version = "0.1.0"
+description = "NVIDIA NIM API client (OpenAI-compatible)"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=1.55.0",
+    "pydantic>=2.9.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=24.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]

@@ -1,0 +1,14 @@
+[project]
+name = "shared-types"
+version = "0.1.0"
+description = "CampaignState and agent I/O Pydantic schemas"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+]

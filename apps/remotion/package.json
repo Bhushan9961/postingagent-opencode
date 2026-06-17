@@ -1,0 +1,21 @@
+{
+  "name": "remotion",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion render",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "remotion": "^4.0.250",
+    "@remotion/player": "^4.0.250",
+    "@remotion/cli": "^4.0.250",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

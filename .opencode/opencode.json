@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "Project.md"
+  ],
+  "skills": {
+    "paths": [
+      "ECC/skills"
+    ]
+  },
+  "agent": {
+    "build": {
+      "description": "Primary coding agent for the AI Marketing Operating System",
+      "mode": "primary",
+      "tools": {
+        "write": true,
+        "edit": true,
+        "bash": true,
+        "read": true
+      }
+    }
+  }
+}
