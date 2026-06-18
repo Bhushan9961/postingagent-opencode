@@ -1,3 +1,6 @@
 [build]
   command = "npx -y pnpm@latest install --no-frozen-lockfile && npx -y pnpm@latest --filter frontend run build"
-  publish = "apps/frontend/.output/public"
+  publish = "apps/frontend/dist"
+
+[functions]
+  directory = "apps/frontend/.netlify/functions-internal"
