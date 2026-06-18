@@ -47,6 +47,9 @@ htmlcov/
 # Alembic
 alembic/versions/__pycache__/
 
+# ECC (Claude Code skills — local dev tool)
+ECC/
+
 # Test / cache
 .mypy_cache/
 test.db
