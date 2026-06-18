@@ -7,6 +7,11 @@ interface User {
   role: string
 }
 
+function storage() {
+  if (import.meta.client) return localStorage
+  return { getItem: () => null, setItem: () => {}, removeItem: () => {} }
+}
+
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null)
   const token = ref<string | null>(null)
@@ -23,13 +28,13 @@ export const useAuthStore = defineStore("auth", () => {
         body: { email, password },
       })
       token.value = res.access_token
-      localStorage.setItem("auth_token", res.access_token)
+      storage().setItem("auth_token", res.access_token)
       const me = await $api("/auth/me", { headers: { Authorization: `Bearer ${token.value}` } })
       user.value = me
     } catch (error) {
       token.value = null
       user.value = null
-      localStorage.removeItem("auth_token")
+      storage().removeItem("auth_token")
       throw error
     }
   }
@@ -37,17 +42,13 @@ export const useAuthStore = defineStore("auth", () => {
   function logout() {
     user.value = null
     token.value = null
-    localStorage.removeItem("auth_token")
+    storage().removeItem("auth_token")
   }
 
-  function initialize() {
-    const savedToken = localStorage.getItem("auth_token")
-    if (savedToken) {
-      token.value = savedToken
-    }
+  const savedToken = storage().getItem("auth_token")
+  if (savedToken) {
+    token.value = savedToken
   }
-
-  initialize()
 
   return { user, token, isAuthenticated, isAdmin, isReviewer, login, logout }
 })
