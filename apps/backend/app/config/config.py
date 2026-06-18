@@ -31,7 +31,13 @@ class Settings(BaseSettings):
     nvidia_api_key: str = ""
     nvidia_base_url: str = "https://integrate.api.nvidia.com/v1"
 
-    sc_api_key: str = ""
+    linkedin_access_token: str = ""
+    linkedin_author_urn: str = ""
+
+    facebook_page_access_token: str = ""
+    facebook_page_id: str = ""
+
+    instagram_business_account_id: str = ""
 
     storage_bucket: str = "campaign-assets"
 

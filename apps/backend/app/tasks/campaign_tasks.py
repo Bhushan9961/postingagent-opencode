@@ -9,7 +9,7 @@ from app.config.config import settings
 from app.core.database import engine
 from app.models.campaign import Campaign, CampaignStatus
 from app.services.llm_client import get_llm_client
-from app.services.socialclaw_client import SocialClawClient
+from app.services.social_publisher import SocialPublisher
 from app.tasks.remotion_tasks import render_marketing_video
 from app.workers.celery_app import celery_app
 
@@ -18,8 +18,9 @@ SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 async def _run_pipeline(campaign_id: int) -> dict:
     llm = get_llm_client()
-    socialclaw = SocialClawClient() if settings.sc_api_key else None
-    graph = build_campaign_graph(llm, db_url=settings.database_url, socialclaw=socialclaw)
+    has_tokens = any([settings.linkedin_access_token, settings.facebook_page_access_token])
+    publisher = SocialPublisher() if has_tokens else None
+    graph = build_campaign_graph(llm, db_url=settings.database_url, publisher=publisher)
 
     async with SessionLocal() as session:
         result = await session.execute(select(Campaign).where(Campaign.id == campaign_id))

@@ -26,6 +26,16 @@ services:
         sync: false
       - key: JWT_SECRET
         sync: false
+      - key: LINKEDIN_ACCESS_TOKEN
+        sync: false
+      - key: LINKEDIN_AUTHOR_URN
+        sync: false
+      - key: FACEBOOK_PAGE_ACCESS_TOKEN
+        sync: false
+      - key: FACEBOOK_PAGE_ID
+        sync: false
+      - key: INSTAGRAM_BUSINESS_ACCOUNT_ID
+        sync: false
       - key: JWT_ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES

@@ -1,7 +1,7 @@
 from agent_core import BaseAgent
 from llm_client import NvidiaLLMClient
 
-from app.services.socialclaw_client import PROVIDER_MAP, SocialClawClient, SocialClawError
+from app.services.social_publisher import SocialPublisher
 
 
 class ImageAgent(BaseAgent):
@@ -144,61 +144,37 @@ class QualityControlAgent(BaseAgent):
 
 
 class PublisherAgent(BaseAgent):
-    """Agent 14: Publish assets to platforms via SocialClaw."""
+    """Agent 14: Publish assets to platforms via SocialPublisher."""
 
-    def __init__(self, socialclaw: SocialClawClient | None = None):
+    def __init__(self, publisher: SocialPublisher | None = None):
         super().__init__("publisher_agent")
-        self.socialclaw = socialclaw
+        self.publisher = publisher
 
     async def process(self, state: dict) -> dict:
         content_plan = state.get("content_plan", {})
 
-        if self.socialclaw:
-            try:
-                posts = []
-                for item in content_plan.get("items", []):
-                    post = {
-                        "provider": PROVIDER_MAP.get(
-                            item.get("platform", ""), item.get("platform")
-                        ),
-                        "text": item.get("description", ""),
-                    }
-                    if item.get("scheduled_at"):
-                        post["scheduled_at"] = item["scheduled_at"]
-                    posts.append(post)
+        if not self.publisher:
+            return {
+                "publication_records": [
+                    {"platform": item.get("platform"), "status": "pending", "scheduled": True}
+                    for item in content_plan.get("items", [])
+                ]
+            }
 
-                result = await self.socialclaw.apply_schedule({"posts": posts})
-                run_id = result.get("run_id")
+        results = []
+        for item in content_plan.get("items", []):
+            platform = item.get("platform", "")
+            text = item.get("description", "")
+            result = await self.publisher.publish(platform=platform, text=text)
+            results.append({
+                "platform": result.platform,
+                "status": result.status,
+                "post_id": result.post_id,
+                "url": result.url,
+                "error": result.error,
+            })
 
-                return {
-                    "publication_records": [
-                        {
-                            "platform": item.get("platform"),
-                            "status": "scheduled",
-                            "scheduled": True,
-                            "run_id": run_id,
-                        }
-                        for item in content_plan.get("items", [])
-                    ]
-                }
-            except SocialClawError as e:
-                return {
-                    "publication_records": [
-                        {
-                            "platform": item.get("platform"),
-                            "status": "failed",
-                            "error": str(e),
-                        }
-                        for item in content_plan.get("items", [])
-                    ]
-                }
-
-        return {
-            "publication_records": [
-                {"platform": item.get("platform"), "status": "pending", "scheduled": True}
-                for item in content_plan.get("items", [])
-            ]
-        }
+        return {"publication_records": results}
 
 
 class AnalyticsAgent(BaseAgent):

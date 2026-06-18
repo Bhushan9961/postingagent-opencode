@@ -22,10 +22,12 @@ from app.agents.research_agent import ResearchAgent
 from app.agents.state import CampaignState
 from app.agents.storytelling_agent import StorytellingAgent
 from app.agents.strategy_agent import StrategyAgent
-from app.services.socialclaw_client import SocialClawClient
+from app.services.social_publisher import SocialPublisher
 
 
-def build_campaign_graph(llm: NvidiaLLMClient, db_url: str | None = None, socialclaw: SocialClawClient | None = None):
+def build_campaign_graph(
+    llm: NvidiaLLMClient, db_url: str | None = None, publisher: SocialPublisher | None = None
+):
     research_agent = ResearchAgent(llm)
     platform_agent = PlatformIntelligenceAgent()
     strategy_agent = StrategyAgent(llm)
@@ -39,7 +41,7 @@ def build_campaign_graph(llm: NvidiaLLMClient, db_url: str | None = None, social
     video_editor = VideoEditorAgent()
     brand_guardian = BrandGuardianAgent()
     qc_agent = QualityControlAgent(llm)
-    publisher = PublisherAgent(socialclaw=socialclaw)
+    publisher = PublisherAgent(publisher=publisher)
     analytics = AnalyticsAgent()
     learning = LearningAgent(llm)
     optimization = OptimizationAgent(llm)
@@ -99,7 +101,9 @@ def build_campaign_graph(llm: NvidiaLLMClient, db_url: str | None = None, social
     return workflow.compile()
 
 
-async def run_campaign(llm: NvidiaLLMClient, campaign_data: dict, db_url: str | None = None) -> dict:
+async def run_campaign(
+    llm: NvidiaLLMClient, campaign_data: dict, db_url: str | None = None
+) -> dict:
     graph = build_campaign_graph(llm, db_url)
     initial_state: CampaignState = {
         "campaign": campaign_data,
