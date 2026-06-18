@@ -1,7 +1,12 @@
 [build]
-  command = "npx nuxi build"
+  command = "npm install && npm run build"
   publish = ".output/public"
   base = "apps/frontend"
 
 [functions]
   directory = ".output/server"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://ai-marketing-backend.onrender.com/api/:splat"
+  status = 200
