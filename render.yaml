@@ -31,7 +31,7 @@ services:
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "30"
       - key: ALLOWED_ORIGINS
-        value: '["https://maektingagent.netlify.app"]'
+        value: '["http://localhost:3000", "https://maektingagent.netlify.app", "https://ai-marketing-backend-avre.onrender.com"]'
 
 databases:
   - name: ai-marketing-db

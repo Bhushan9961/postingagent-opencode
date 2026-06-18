@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1",
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || "https://ai-marketing-backend-avre.onrender.com/api/v1",
     },
   },
   nitro: {
