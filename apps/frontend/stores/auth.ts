@@ -16,21 +16,38 @@ export const useAuthStore = defineStore("auth", () => {
   const isReviewer = computed(() => user.value?.role === "content_reviewer" || user.value?.role === "admin")
 
   async function login(email: string, password: string) {
-    const { $api } = useNuxtApp()
-    const res = await $api("/auth/login", {
-      method: "POST",
-      body: { email, password },
-    })
-    token.value = res.access_token
-    const me = await $api("/auth/me", { headers: { Authorization: `Bearer ${token.value}` } })
-    user.value = me
+    try {
+      const { $api } = useNuxtApp()
+      const res = await $api("/auth/login", {
+        method: "POST",
+        body: { email, password },
+      })
+      token.value = res.access_token
+      localStorage.setItem("auth_token", res.access_token)
+      const me = await $api("/auth/me", { headers: { Authorization: `Bearer ${token.value}` } })
+      user.value = me
+    } catch (error) {
+      token.value = null
+      user.value = null
+      localStorage.removeItem("auth_token")
+      throw error
+    }
   }
 
   function logout() {
     user.value = null
     token.value = null
-    navigateTo("/login")
+    localStorage.removeItem("auth_token")
   }
+
+  function initialize() {
+    const savedToken = localStorage.getItem("auth_token")
+    if (savedToken) {
+      token.value = savedToken
+    }
+  }
+
+  initialize()
 
   return { user, token, isAuthenticated, isAdmin, isReviewer, login, logout }
 })

@@ -1,9 +1,5 @@
 import { createPinia } from "pinia"
 
-export default defineNuxtPlugin(({ $pinia }) => {
-  return {
-    provide: {
-      pinia: $pinia || createPinia(),
-    },
-  }
+export default defineNuxtPlugin(({ vueApp }) => {
+  vueApp.use(createPinia())
 })

@@ -7,6 +7,7 @@
       </div>
       <div class="rounded-xl border bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <form @submit.prevent="handleLogin" class="space-y-4">
+          <p v-if="error" class="text-sm text-red-600 dark:text-red-400">{{ error }}</p>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
             <input
@@ -36,11 +37,20 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from "~/stores/auth"
+
 const email = ref("")
 const password = ref("")
-const router = useRouter()
+const authStore = useAuthStore()
+const error = ref("")
 
 async function handleLogin() {
-  await navigateTo("/dashboard")
+  error.value = ""
+  try {
+    await authStore.login(email.value, password.value)
+    await navigateTo("/dashboard")
+  } catch {
+    error.value = "Login failed. Please check your credentials."
+  }
 }
 </script>
