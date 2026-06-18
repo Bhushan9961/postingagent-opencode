@@ -1,30 +1,31 @@
-from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.postgres import PostgresSaver
-
+from langgraph.graph import END, StateGraph
 from llm_client import NvidiaLLMClient
-from app.agents.state import CampaignState
-from app.agents.research_agent import ResearchAgent
-from app.agents.platform_intelligence_agent import PlatformIntelligenceAgent
-from app.agents.strategy_agent import StrategyAgent
+
 from app.agents.content_planner_agent import ContentPlannerAgent
 from app.agents.creative_director_agent import CreativeDirectorAgent
-from app.agents.storytelling_agent import StorytellingAgent
+from app.agents.platform_intelligence_agent import PlatformIntelligenceAgent
 from app.agents.remaining_agents import (
-    ImageAgent,
-    CarouselAgent,
-    VideoAgent,
-    VoiceAgent,
-    VideoEditorAgent,
-    BrandGuardianAgent,
-    QualityControlAgent,
-    PublisherAgent,
     AnalyticsAgent,
+    BrandGuardianAgent,
+    CarouselAgent,
+    ImageAgent,
     LearningAgent,
     OptimizationAgent,
+    PublisherAgent,
+    QualityControlAgent,
+    VideoAgent,
+    VideoEditorAgent,
+    VoiceAgent,
 )
+from app.agents.research_agent import ResearchAgent
+from app.agents.state import CampaignState
+from app.agents.storytelling_agent import StorytellingAgent
+from app.agents.strategy_agent import StrategyAgent
+from app.services.socialclaw_client import SocialClawClient
 
 
-def build_campaign_graph(llm: NvidiaLLMClient, db_url: str | None = None):
+def build_campaign_graph(llm: NvidiaLLMClient, db_url: str | None = None, socialclaw: SocialClawClient | None = None):
     research_agent = ResearchAgent(llm)
     platform_agent = PlatformIntelligenceAgent()
     strategy_agent = StrategyAgent(llm)
@@ -38,7 +39,7 @@ def build_campaign_graph(llm: NvidiaLLMClient, db_url: str | None = None):
     video_editor = VideoEditorAgent()
     brand_guardian = BrandGuardianAgent()
     qc_agent = QualityControlAgent(llm)
-    publisher = PublisherAgent()
+    publisher = PublisherAgent(socialclaw=socialclaw)
     analytics = AnalyticsAgent()
     learning = LearningAgent(llm)
     optimization = OptimizationAgent(llm)

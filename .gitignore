@@ -47,6 +47,11 @@ htmlcov/
 # Alembic
 alembic/versions/__pycache__/
 
+# Test / cache
+.mypy_cache/
+test.db
+pytest.ini
+
 # Docker
 .docker/
 

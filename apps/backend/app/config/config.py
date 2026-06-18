@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="../../.env",
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://localhost:5432/ai_marketing_os"
     redis_url: str = "redis://localhost:6379/0"
 
+    supabase_url: str = ""
+    supabase_anon_key: str = ""
+    supabase_service_key: str = ""
+
     jwt_secret: str = "change-me-to-a-random-64-char-string"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
@@ -29,11 +33,7 @@ class Settings(BaseSettings):
 
     sc_api_key: str = ""
 
-    r2_account_id: str = ""
-    r2_access_key_id: str = ""
-    r2_secret_access_key: str = ""
-    r2_bucket_name: str = "ai-marketing-assets"
-    r2_public_url: str = ""
+    storage_bucket: str = "campaign-assets"
 
     comfyui_url: str = "http://localhost:8188"
     comfyui_timeout: int = 600
@@ -42,6 +42,8 @@ class Settings(BaseSettings):
 
     @property
     def async_database_url(self) -> str:
+        if self.database_url.startswith("postgresql+asyncpg://"):
+            return self.database_url
         return self.database_url.replace("postgresql://", "postgresql+asyncpg://")
 
 

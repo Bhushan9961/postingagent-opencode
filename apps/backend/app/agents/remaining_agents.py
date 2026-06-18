@@ -1,6 +1,8 @@
 from agent_core import BaseAgent
 from llm_client import NvidiaLLMClient
 
+from app.services.socialclaw_client import PROVIDER_MAP, SocialClawClient, SocialClawError
+
 
 class ImageAgent(BaseAgent):
     """Agent 7: Generate professional images via NVIDIA API."""
@@ -25,7 +27,6 @@ class CarouselAgent(BaseAgent):
         super().__init__("carousel_agent")
 
     async def process(self, state: dict) -> dict:
-        story = state.get("story", {})
         content_plan = state.get("content_plan", {})
         assets = state.get("assets", {})
         images = assets.get("images", [])
@@ -75,7 +76,28 @@ class VideoEditorAgent(BaseAgent):
 
     async def process(self, state: dict) -> dict:
         assets = state.get("assets", {})
-        return {"assets": {**assets, "final_video": {"status": "pending", "url": None}}}
+        scenes = assets.get("video_scenes", [])
+        brand_rules = state.get("quality", {}).get("brand_rules", {})
+        brand_color = brand_rules.get("colors", {}).get("primary", "#3b82f6")
+
+        render_input = {
+            "scenes": [
+                {"caption": s.get("caption", ""), "duration": s.get("duration", 90)}
+                for s in scenes
+            ],
+            "brand_color": brand_color,
+        }
+
+        return {
+            "assets": {
+                **assets,
+                "final_video": {
+                    "status": "pending",
+                    "url": None,
+                    "render_input": render_input,
+                },
+            }
+        }
 
 
 class BrandGuardianAgent(BaseAgent):
@@ -122,13 +144,55 @@ class QualityControlAgent(BaseAgent):
 
 
 class PublisherAgent(BaseAgent):
-    """Agent 14: Publish assets to platforms."""
+    """Agent 14: Publish assets to platforms via SocialClaw."""
 
-    def __init__(self):
+    def __init__(self, socialclaw: SocialClawClient | None = None):
         super().__init__("publisher_agent")
+        self.socialclaw = socialclaw
 
     async def process(self, state: dict) -> dict:
         content_plan = state.get("content_plan", {})
+
+        if self.socialclaw:
+            try:
+                posts = []
+                for item in content_plan.get("items", []):
+                    post = {
+                        "provider": PROVIDER_MAP.get(
+                            item.get("platform", ""), item.get("platform")
+                        ),
+                        "text": item.get("description", ""),
+                    }
+                    if item.get("scheduled_at"):
+                        post["scheduled_at"] = item["scheduled_at"]
+                    posts.append(post)
+
+                result = await self.socialclaw.apply_schedule({"posts": posts})
+                run_id = result.get("run_id")
+
+                return {
+                    "publication_records": [
+                        {
+                            "platform": item.get("platform"),
+                            "status": "scheduled",
+                            "scheduled": True,
+                            "run_id": run_id,
+                        }
+                        for item in content_plan.get("items", [])
+                    ]
+                }
+            except SocialClawError as e:
+                return {
+                    "publication_records": [
+                        {
+                            "platform": item.get("platform"),
+                            "status": "failed",
+                            "error": str(e),
+                        }
+                        for item in content_plan.get("items", [])
+                    ]
+                }
+
         return {
             "publication_records": [
                 {"platform": item.get("platform"), "status": "pending", "scheduled": True}

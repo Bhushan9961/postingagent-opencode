@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config.config import settings
 from app.api.v1.auth import router as auth_router
 from app.api.v1.campaigns import router as campaigns_router
 from app.api.v1.content import router as content_router
+from app.config.config import settings
 
 app = FastAPI(
     title=settings.app_name,

@@ -1,10 +1,10 @@
-from openai import AsyncOpenAI
+from llm_client import NvidiaLLMClient
 
 from app.config.config import settings
 
 
-def get_llm_client() -> AsyncOpenAI:
-    return AsyncOpenAI(
+def get_llm_client() -> NvidiaLLMClient:
+    return NvidiaLLMClient(
         api_key=settings.nvidia_api_key,
         base_url=settings.nvidia_base_url,
     )

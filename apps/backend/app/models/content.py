@@ -1,5 +1,5 @@
 import enum
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 
 
-class ContentStatus(str, enum.Enum):
+class ContentStatus(enum.StrEnum):
     DRAFT = "draft"
     APPROVAL_PENDING = "approval_pending"
     APPROVED = "approved"

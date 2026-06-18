@@ -1,0 +1,7 @@
+[build]
+  command = "npx nuxi build"
+  publish = ".output/public"
+  base = "apps/frontend"
+
+[functions]
+  directory = ".output/server"
