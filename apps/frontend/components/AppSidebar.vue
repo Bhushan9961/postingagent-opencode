@@ -22,7 +22,7 @@
     <div class="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4 dark:border-gray-700">
       <button
         class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
-        @click="logout"
+        @click="authStore.logout"
       >
         <span class="text-lg">→</span>
         Sign Out
@@ -32,8 +32,10 @@
 </template>
 
 <script setup lang="ts">
+import { useAuthStore } from "~/stores/auth"
+
 const route = useRoute()
-const { logout } = useAuth()
+const authStore = useAuthStore()
 
 const navItems = [
   { label: "Executive Overview", to: "/dashboard", icon: "◉" },
