@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-marketing-backend
     runtime: python
-    repo: https://github.com/Bhushan9961/-postingagent-opencode
+    repo: https://github.com/Bhushan2700/postingagent-opencode
     rootDir: apps/backend
     region: oregon
     plan: free
