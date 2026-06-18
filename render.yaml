@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-marketing-backend
     runtime: python
-    repo: https://github.com/Bhushan2700/postingagent-opencode
+    repo: https://github.com/Bhushan9961/postingagent-opencode
     rootDir: apps/backend
     region: oregon
     plan: free
@@ -20,8 +20,8 @@ services:
         value: "false"
       - key: DATABASE_URL
         fromDatabase:
-          type: postgres
           name: ai-marketing-db
+          property: connectionString
       - key: SUPABASE_URL
         value: https://mmeycvrjbkmuctpkzcqg.supabase.co
       - key: SUPABASE_SERVICE_KEY
