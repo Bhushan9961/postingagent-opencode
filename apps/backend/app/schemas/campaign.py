@@ -15,6 +15,12 @@ class CampaignRead(BaseModel):
     goal: str | None
     target_audience: str | None
     status: str
+    state_data: dict | None = None
+    research: dict | None = None
+    strategy: dict | None = None
+    content_plan: dict | None = None
+    analytics: dict | None = None
+    learnings: dict | None = None
     created_by: int
     created_at: datetime
     updated_at: datetime
