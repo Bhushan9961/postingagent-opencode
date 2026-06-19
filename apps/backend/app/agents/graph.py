@@ -1,4 +1,3 @@
-from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import END, StateGraph
 from llm_client import NvidiaLLMClient
 
@@ -101,9 +100,6 @@ def build_campaign_graph(
     workflow.add_edge("optimization", END)
     workflow.set_entry_point("research")
 
-    if db_url:
-        checkpointer = PostgresSaver.from_conn_string(db_url)
-        return workflow.compile(checkpointer=checkpointer)
     return workflow.compile()
 
 
