@@ -30,8 +30,9 @@ from app.services.video_renderer import VideoRenderer
 def build_campaign_graph(
     llm: NvidiaLLMClient, db_url: str | None = None, publisher: SocialPublisher | None = None
 ):
-    storage = SupabaseStorage() if settings.supabase_service_key else None
-    renderer = VideoRenderer(supabase_storage=storage) if storage else None
+    has_storage = all([settings.supabase_url, settings.supabase_service_key])
+    storage = SupabaseStorage() if has_storage else None
+    renderer = VideoRenderer(supabase_storage=storage) if has_storage else None
 
     research_agent = ResearchAgent(llm)
     platform_agent = PlatformIntelligenceAgent()
