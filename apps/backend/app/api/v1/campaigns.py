@@ -1,3 +1,6 @@
+import asyncio
+
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,6 +11,8 @@ from app.models.campaign import Campaign, CampaignStatus
 from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignUpdate
 from app.tasks.campaign_tasks import _run_pipeline as run_pipeline_direct
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -88,9 +93,37 @@ async def start_campaign(
     if campaign.status != CampaignStatus.DRAFT:
         raise HTTPException(status_code=400, detail="Campaign already started")
 
-    pipeline_result = await run_pipeline_direct(campaign_id)
+    campaign.status = CampaignStatus.RESEARCHING
+    await db.commit()
+
+    asyncio.create_task(_run_pipeline_wrapper(campaign_id))
+
     return {
         "message": "Campaign started",
         "campaign_id": campaign_id,
-        "pipeline": pipeline_result,
+        "status": "running",
     }
+
+
+async def _run_pipeline_wrapper(campaign_id: int) -> None:
+    try:
+        await run_pipeline_direct(campaign_id)
+    except Exception as e:
+        logger.exception("pipeline_crashed", campaign_id=campaign_id, error=str(e))
+        try:
+            from sqlalchemy.ext.asyncio import async_sessionmaker
+
+            from app.core.database import engine
+
+            sf = async_sessionmaker(engine, expire_on_commit=False)
+            async with sf() as session:
+                result = await session.execute(
+                    select(Campaign).where(Campaign.id == campaign_id)
+                )
+                c = result.scalar_one_or_none()
+                if c:
+                    c.status = CampaignStatus.FAILED
+                    c.state_data = {"error": str(e)}
+                    await session.commit()
+        except Exception:
+            logger.exception("failed_to_mark_failed", campaign_id=campaign_id)

@@ -10,7 +10,6 @@ from app.core.database import engine
 from app.models.campaign import Campaign, CampaignStatus
 from app.services.llm_client import get_llm_client
 from app.services.social_publisher import SocialPublisher
-from app.tasks.remotion_tasks import render_marketing_video
 from app.workers.celery_app import celery_app
 
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
@@ -58,18 +57,6 @@ async def _run_pipeline(campaign_id: int) -> dict:
             campaign.content_plan = final_state.get("content_plan", {})
             campaign.analytics = final_state.get("analytics", {})
             campaign.learnings = final_state.get("learnings", {})
-
-            render_input = (
-                final_state.get("assets", {})
-                .get("final_video", {})
-                .get("render_input")
-            )
-            if render_input:
-                render_marketing_video.delay(
-                    scenes=render_input["scenes"],
-                    brand_color=render_input.get("brand_color", "#3b82f6"),
-                    output_name=f"campaign_{campaign_id}.mp4",
-                )
         except Exception as e:
             campaign.status = CampaignStatus.FAILED
             campaign.state_data = {"error": str(e)}
