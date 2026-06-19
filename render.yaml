@@ -26,8 +26,6 @@ services:
         sync: false
       - key: LLM_API_KEY
         sync: false
-      - key: LLM_BASE_URL
-        value: https://api.deepseek.com
       - key: JWT_SECRET
         sync: false
       - key: LINKEDIN_ACCESS_TOKEN
