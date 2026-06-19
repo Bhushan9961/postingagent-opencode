@@ -2,6 +2,8 @@ from agent_core import BaseAgent
 from llm_client import NvidiaLLMClient
 
 from app.services.social_publisher import SocialPublisher
+from app.services.storage import SupabaseStorage
+from app.services.video_renderer import VideoRenderer
 
 
 class ImageAgent(BaseAgent):
@@ -58,46 +60,75 @@ class VideoAgent(BaseAgent):
 class VoiceAgent(BaseAgent):
     """Agent 10: Generate voiceover via NVIDIA TTS."""
 
-    def __init__(self, llm: NvidiaLLMClient):
+    def __init__(self, llm: NvidiaLLMClient, storage: SupabaseStorage | None = None):
         super().__init__("voice_agent")
         self.llm = llm
+        self.storage = storage
 
     async def process(self, state: dict) -> dict:
         story = state.get("story", {})
         script = story.get("script", "")
-        return {"assets": {**state.get("assets", {}), "voice": {"script": script}}}
 
+        if not script or not self.storage:
+            return {"assets": {**state.get("assets", {}), "voice": {"script": script, "url": None}}}
 
-class VideoEditorAgent(BaseAgent):
-    """Agent 11: Produce final video via Remotion."""
+        audio_bytes = await self.llm.generate_speech(script)
+        if not audio_bytes:
+            return {"assets": {**state.get("assets", {}), "voice": {"script": script, "url": None}}}
 
-    def __init__(self):
-        super().__init__("video_editor_agent")
+        import hashlib
+        import uuid
 
-    async def process(self, state: dict) -> dict:
-        assets = state.get("assets", {})
-        scenes = assets.get("video_scenes", [])
-        brand_rules = state.get("quality", {}).get("brand_rules", {})
-        brand_color = brand_rules.get("colors", {}).get("primary", "#3b82f6")
-
-        render_input = {
-            "scenes": [
-                {"caption": s.get("caption", ""), "duration": s.get("duration", 90)}
-                for s in scenes
-            ],
-            "brand_color": brand_color,
-        }
+        checksum = hashlib.md5(script.encode()).hexdigest()[:8]
+        object_name = f"voiceovers/{uuid.uuid4().hex}_{checksum}.mp3"
+        result = await self.storage.upload_bytes(
+            data=audio_bytes,
+            object_name=object_name,
+            content_type="audio/mpeg",
+        )
 
         return {
             "assets": {
-                **assets,
-                "final_video": {
-                    "status": "pending",
-                    "url": None,
-                    "render_input": render_input,
-                },
+                **state.get("assets", {}),
+                "voice": {"script": script, "url": result["url"]},
             }
         }
+
+
+class VideoEditorAgent(BaseAgent):
+    """Agent 11: Produce final video via Remotion/FFmpeg."""
+
+    def __init__(self, renderer: VideoRenderer | None = None):
+        super().__init__("video_editor_agent")
+        self.renderer = renderer
+
+    async def process(self, state: dict) -> dict:
+        if not self.renderer:
+            return {
+                "assets": {
+                    **state.get("assets", {}),
+                    "final_video": {"status": "pending", "url": None, "duration": 0},
+                }
+            }
+
+        assets = state.get("assets", {})
+        scenes = assets.get("video_scenes", [])
+        images = assets.get("images", [])
+        voice = assets.get("voice", {})
+        brand_rules = state.get("quality", {}).get("brand_rules", {})
+        brand_color = brand_rules.get("colors", {}).get("primary", "#3b82f6")
+        campaign = state.get("campaign", {})
+        campaign_id = campaign.get("id", "")
+
+        result = await self.renderer.render(
+            scenes=scenes,
+            images=images,
+            voice_url=voice.get("url"),
+            brand_color=brand_color,
+            campaign_id=str(campaign_id),
+        )
+
+        return {"assets": {**assets, "final_video": result}}
 
 
 class BrandGuardianAgent(BaseAgent):

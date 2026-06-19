@@ -15,6 +15,20 @@ class NvidiaLLMClient:
         self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
         self.logger = logger.bind(service="nvidia_llm")
 
+    async def generate_speech(self, text: str, model: str = TTS_MODEL) -> bytes | None:
+        self.logger.info("tts_request", model=model)
+        try:
+            response = await self.client.audio.speech.create(
+                model=model,
+                voice="default",
+                input=text,
+                response_format="mp3",
+            )
+            return response.content
+        except Exception as e:
+            self.logger.error("tts_failed", error=str(e))
+            return None
+
     async def chat(
         self,
         system_prompt: str,

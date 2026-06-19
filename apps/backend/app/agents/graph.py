@@ -22,12 +22,18 @@ from app.agents.research_agent import ResearchAgent
 from app.agents.state import CampaignState
 from app.agents.storytelling_agent import StorytellingAgent
 from app.agents.strategy_agent import StrategyAgent
+from app.config.config import settings
 from app.services.social_publisher import SocialPublisher
+from app.services.storage import SupabaseStorage
+from app.services.video_renderer import VideoRenderer
 
 
 def build_campaign_graph(
     llm: NvidiaLLMClient, db_url: str | None = None, publisher: SocialPublisher | None = None
 ):
+    storage = SupabaseStorage() if settings.supabase_service_key else None
+    renderer = VideoRenderer(supabase_storage=storage) if storage else None
+
     research_agent = ResearchAgent(llm)
     platform_agent = PlatformIntelligenceAgent()
     strategy_agent = StrategyAgent(llm)
@@ -37,8 +43,8 @@ def build_campaign_graph(
     image_agent = ImageAgent(llm)
     carousel_agent = CarouselAgent()
     video_agent = VideoAgent()
-    voice_agent = VoiceAgent(llm)
-    video_editor = VideoEditorAgent()
+    voice_agent = VoiceAgent(llm, storage=storage)
+    video_editor = VideoEditorAgent(renderer=renderer)
     brand_guardian = BrandGuardianAgent()
     qc_agent = QualityControlAgent(llm)
     publisher = PublisherAgent(publisher=publisher)
