@@ -4,15 +4,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+import app.models.audit_log  # noqa: F401
+import app.models.campaign  # noqa: F401
+import app.models.content  # noqa: F401
+import app.models.user  # noqa: F401
 from app.api.v1.auth import router as auth_router
 from app.api.v1.campaigns import router as campaigns_router
 from app.api.v1.content import router as content_router
 from app.config.config import settings
-from app.core.database import engine, Base
-import app.models.user  # noqa: F401
-import app.models.campaign  # noqa: F401
-import app.models.content  # noqa: F401
-import app.models.audit_log  # noqa: F401
+from app.core.database import Base, engine
+from app.services.llm_client import get_llm_client
 
 
 @asynccontextmanager
@@ -50,4 +51,40 @@ async def health():
         db_status = "ok"
     except Exception:
         db_status = "error"
-    return {"status": "ok", "app": settings.app_name, "version": settings.app_version, "database": db_status}
+    return {
+        "status": "ok",
+        "app": settings.app_name,
+        "version": settings.app_version,
+        "database": db_status,
+        "has_nv_api_key": bool(settings.nvidia_api_key),
+        "has_supabase_url": bool(settings.supabase_url),
+        "has_supabase_key": bool(settings.supabase_service_key),
+        "nvidia_base_url": settings.nvidia_base_url,
+    }
+
+
+@app.get("/debug/nvidia")
+async def debug_nvidia():
+    try:
+        llm = get_llm_client()
+        result = await llm.chat(
+            system_prompt="You are a test assistant.",
+            user_prompt="Say hello in 1 word.",
+            max_tokens=20,
+        )
+        return {"status": "ok", "result": result, "model": "deepseek-ai/deepseek-v4-pro"}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "type": type(e).__name__}
+
+
+@app.get("/debug/image")
+async def debug_image():
+    try:
+        llm = get_llm_client()
+        url = await llm.generate_image(
+            prompt="A simple test image of a blue circle on white background",
+            size="1024x1024",
+        )
+        return {"status": "ok", "url": url}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "type": type(e).__name__}
