@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -86,5 +87,30 @@ async def debug_image():
             size="1024x1024",
         )
         return {"status": "ok", "url": url}
+    except Exception as e:
+        return {"status": "error", "error": str(e), "type": type(e).__name__}
+
+
+@app.get("/debug/raw-nvidia")
+async def debug_raw_nvidia():
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            r = await client.post(
+                "https://integrate.api.nvidia.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {settings.nvidia_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "deepseek-ai/deepseek-v4-pro",
+                    "messages": [{"role": "user", "content": "Say hello in 1 word"}],
+                    "max_tokens": 10,
+                },
+            )
+            return {
+                "status_code": r.status_code,
+                "headers": dict(r.headers),
+                "body": r.text[:500],
+            }
     except Exception as e:
         return {"status": "error", "error": str(e), "type": type(e).__name__}
