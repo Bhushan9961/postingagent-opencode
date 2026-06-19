@@ -7,25 +7,32 @@ import structlog
 
 logger = structlog.get_logger()
 
-DEFAULT_MODEL = "deepseek-ai/deepseek-v4-pro"
-IMAGE_MODEL = "qwen/qwen-image"
+DEFAULT_MODEL = "deepseek-chat"
+DEFAULT_BASE_URL = "https://api.deepseek.com"
+
 TTS_MODEL = "resemble-ai/chatterbox-multilingual-tts"
+TTS_BASE_URL = "https://integrate.api.nvidia.com/v1"
 
 MAX_RETRIES = 3
 BASE_DELAY = 2.0
 
 
 class NvidiaLLMClient:
-    """Client for NVIDIA NIM API (OpenAI-compatible)."""
+    """Client for LLM APIs (OpenAI-compatible).
+    
+    Defaults to DeepSeek for chat, NVIDIA for TTS.
+    Can use any OpenAI-compatible endpoint by changing base_url.
+    """
 
-    def __init__(self, api_key: str, base_url: str = "https://integrate.api.nvidia.com/v1"):
-        self.client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-        self.logger = logger.bind(service="nvidia_llm")
+    def __init__(self, api_key: str, base_url: str = DEFAULT_BASE_URL):
+        self.chat_client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+        self.tts_client = AsyncOpenAI(api_key=api_key, base_url=TTS_BASE_URL)
+        self.logger = logger.bind(service="llm_client")
 
-    async def _chat_with_retry(self, **kwargs) -> object:
+    async def _chat_with_retry(self, client: AsyncOpenAI, **kwargs) -> object:
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                return await self.client.chat.completions.create(**kwargs)
+                return await client.chat.completions.create(**kwargs)
             except RateLimitError:
                 if attempt < MAX_RETRIES:
                     delay = min(BASE_DELAY * (2 ** (attempt - 1)), 30)
@@ -39,7 +46,7 @@ class NvidiaLLMClient:
     async def generate_speech(self, text: str, model: str = TTS_MODEL) -> bytes | None:
         self.logger.info("tts_request", model=model)
         try:
-            response = await self.client.audio.speech.create(
+            response = await self.tts_client.audio.speech.create(
                 model=model,
                 voice="default",
                 input=text,
@@ -58,8 +65,9 @@ class NvidiaLLMClient:
         temperature: float = 0.7,
         max_tokens: int = 4096,
     ) -> str:
-        self.logger.info("llm_request", model=model)
+        self.logger.info("llm_request", model=model, base_url=self.chat_client.base_url)
         response = await self._chat_with_retry(
+            self.chat_client,
             model=model,
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -77,8 +85,9 @@ class NvidiaLLMClient:
         model: str = DEFAULT_MODEL,
         temperature: float = 0.3,
     ) -> dict:
-        self.logger.info("llm_json_request", model=model)
+        self.logger.info("llm_json_request", model=model, base_url=self.chat_client.base_url)
         response = await self._chat_with_retry(
+            self.chat_client,
             model=model,
             messages=[
                 {"role": "system", "content": f"{system_prompt}\n\nReturn valid JSON only."},
