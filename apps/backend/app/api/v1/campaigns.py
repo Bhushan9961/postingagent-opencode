@@ -7,6 +7,7 @@ from app.core.security import Role, get_current_user, require_role
 from app.models.campaign import Campaign, CampaignStatus
 from app.models.user import User
 from app.schemas.campaign import CampaignCreate, CampaignRead, CampaignUpdate
+from app.tasks.campaign_tasks import _run_pipeline as run_pipeline_direct
 
 router = APIRouter(prefix="/campaigns", tags=["campaigns"])
 
@@ -86,6 +87,10 @@ async def start_campaign(
         raise HTTPException(status_code=404, detail="Campaign not found")
     if campaign.status != CampaignStatus.DRAFT:
         raise HTTPException(status_code=400, detail="Campaign already started")
-    campaign.status = CampaignStatus.RESEARCHING
-    await db.commit()
-    return {"message": "Campaign started", "campaign_id": campaign_id}
+
+    pipeline_result = await run_pipeline_direct(campaign_id)
+    return {
+        "message": "Campaign started",
+        "campaign_id": campaign_id,
+        "pipeline": pipeline_result,
+    }
